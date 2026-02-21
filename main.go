@@ -1,8 +1,10 @@
 package main
 
 import (
+	"cmp"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/cespedes/cache/db"
 	"github.com/cespedes/cache/handlers"
@@ -16,9 +18,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// HTML
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/index.html")
-	})
+	mux.Handle("/", http.FileServer(http.Dir("static")))
 
 	// Location routes
 	mux.HandleFunc("GET /locations", handlers.ListLocations)
@@ -34,6 +34,7 @@ func main() {
 	mux.HandleFunc("PUT /items/{id}", handlers.UpdateItem)
 	mux.HandleFunc("DELETE /items/{id}", handlers.DeleteItem)
 
-	log.Println("listening on 127.0.0.1:19970")
-	log.Fatal(http.ListenAndServe("127.0.0.1:19970", mux))
+	listenAddr := cmp.Or(os.Getenv("LISTEN_ADDR"), "127.0.0.1:19970")
+	log.Println("listening on " + listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, mux))
 }
