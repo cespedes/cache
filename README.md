@@ -1,4 +1,5 @@
-# cache
+
+![cache](static/logo.png)
 
 `cache` is a home inventory app written in Go, designed to be the "source of truth" for your physical assets.
 
