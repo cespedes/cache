@@ -1,6 +1,6 @@
 const API = '';  // same origin
 
-// ── State ──────────────────────────────────────────────────────────────────
+// -- State ------------------------------------------------------------------
 let currentTab = 'locations';
 let locations = [];
 let items = [];
@@ -9,7 +9,7 @@ let formMode = null;   // { action: 'create'|'edit', entity, data?, defaultLocat
 let searchTimer = null;
 let expandedIds = new Set(); // ids of expanded location nodes
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// -- Helpers ----------------------------------------------------------------
 async function api(method, path, body) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
@@ -34,7 +34,7 @@ function fmtDate(iso) {
   });
 }
 
-// ── Data loading ───────────────────────────────────────────────────────────
+// -- Data loading -----------------------------------------------------------
 async function loadLocations(q = '') {
   locations = await api('GET', '/locations' + (q ? `?q=${encodeURIComponent(q)}` : ''));
   renderList();
@@ -50,7 +50,7 @@ function load(q = '') {
   else loadItems(q);
 }
 
-// ── Location tree ──────────────────────────────────────────────────────────
+// -- Location tree ----------------------------------------------------------
 function buildTree(locs) {
   const map = {};
   locs.forEach(l => map[l.id] = { ...l, children: [] });
@@ -76,7 +76,7 @@ function flattenVisible(roots, map) {
   return flat;
 }
 
-// ── Render list ────────────────────────────────────────────────────────────
+// -- Render list ------------------------------------------------------------
 function renderList() {
   const el = document.getElementById('list');
   const q = document.getElementById('search').value;
@@ -135,7 +135,6 @@ function renderList() {
         renderList();
       });
     });
-
   } else {
     if (!items.length) { el.innerHTML = '<div class="list-empty">no items</div>'; return; }
     el.innerHTML = items.map(item => {
@@ -189,7 +188,7 @@ function locationOptionsFor(excludeId = null) {
     .sort((a, b) => a.path.localeCompare(b.path));
 }
 
-// ── Detail view ────────────────────────────────────────────────────────────
+// -- Detail view ------------------------------------------------------------
 function openDetailPanel() {
   document.querySelector('main').classList.add('detail-open');
 }
@@ -201,6 +200,7 @@ function closeDetailPanel() {
 async function selectItem(id) {
   if (currentTab === 'locations') {
     selected = locations.find(l => l.id === id);
+    console.log(`selectItem(${id}): selected=${selected}`);
     if (!selected) return;
     // Expand this node and all its ancestors so it's visible in the tree
     let cur = selected;
@@ -208,20 +208,96 @@ async function selectItem(id) {
       expandedIds.add(cur.id);
       cur = cur.parent_id ? locations.find(l => l.id === cur.parent_id) : null;
     }
-    renderDetail();
+    renderLocation(selected);
     openDetailPanel();
-    const locItems = await api('GET', `/items?location_id=${id}`);
-    renderDetail(locItems);
   } else {
     selected = items.find(i => i.id === id);
     if (!selected) return;
-    renderDetail();
+    renderItem();
     openDetailPanel();
   }
   renderList();
 }
 
+function renderItem() {
+  console.log('renderItem()');
+  const el = document.getElementById('detail');
+  const item = renderTemplate('tpl-item', {
+    title: esc(selected.name),
+    location: locationPath(selected.location_id),
+    created: fmtDate(esc(selected.created_at)),
+    updated: fmtDate(esc(selected.created_at))
+  });
+
+  item.querySelector('#d-edit').addEventListener('click', () => openForm('edit'));
+  item.querySelector('#d-delete').addEventListener('click', deleteSelected);
+  item.querySelectorAll('.loc-link').forEach(a => {
+    a.addEventListener('click', () => {
+      // Switch to locations tab and navigate to that location
+      currentTab = 'locations';
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'locations'));
+      const loc_id = selected.location_id;
+      selected = null;
+      selectItem(parseInt(loc_id));
+    });
+  });
+
+  // Back button (visible only on mobile via CSS)
+  const backBtn = item.querySelector('#d-back');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      selected = null;
+      closeDetailPanel();
+      renderList();
+    });
+  }
+
+  el.innerHTML = '';
+  el.appendChild(item);
+}
+
+function renderLocation(location) {
+  console.log(`renderLocation(${location.name})`);
+
+  const el = document.getElementById('detail');
+  const parent = locations.find(l => l.id === location.parent_id);
+  console.log(`parent_id = ${location.parent_id}`);
+  console.log(`parent = ${parent}`);
+  if (parent) {
+    console.log(`parent.id = ${parent.id}`);
+    console.log(`parentPath = ${locationPath(parent.id)}`);
+  }
+  const loc = renderTemplate('tpl-location', {
+    title: esc(location.name),
+    parent: parent ? locationPath(parent.id) : 'none',
+    created: fmtDate(esc(location.created_at)),
+    updated: fmtDate(esc(location.created_at))
+  });
+  if (parent) {
+    loc.querySelector('.link-parent').addEventListener('click', () => {
+      renderLocation(parent);
+    });
+  }
+  const locs = loc.querySelector('#loc-locations');
+  locations.filter(l => l.parent_id === location.id).forEach(l => {
+    const li = renderTemplate('tpl-mini-location', {
+      name: l.name,
+    });
+    li.firstElementChild.addEventListener('click', () => {
+      renderLocation(l);
+    });
+    locs.appendChild(li);
+  });
+  loc.querySelector('#d-edit').addEventListener('click', () => openForm('edit'));
+  loc.querySelector('#d-delete').addEventListener('click', deleteSelected);
+  loc.querySelector('#d-new-location').addEventListener('click', () => openForm('create', 'location', location.id));
+  loc.querySelector('#d-new-item').addEventListener('click', () => openForm('create', 'item', location.id));
+  el.innerHTML = '';
+  el.appendChild(loc);
+}
+
 function renderDetail(locItems = null) {
+  console.log('renderDetail()');
   const el = document.getElementById('detail');
   if (!selected) { el.innerHTML = '<div class="detail-empty">← select an entry</div>'; return; }
 
@@ -236,7 +312,7 @@ function renderDetail(locItems = null) {
     el.innerHTML = `<div class="detail-content">
       <button class="btn-back" id="d-back">← back</button>
       <div class="detail-top">
-        <div class="detail-title">${esc(selected.name)}</div>
+        <h2>${esc(selected.name)}</h2>
         <div class="detail-actions">
           <button class="btn" id="d-edit">Edit</button>
           <button class="btn danger" id="d-delete">Delete</button>
@@ -282,43 +358,7 @@ function renderDetail(locItems = null) {
       });
     });
   } else {
-    const loc = locations.find(l => l.id === selected.location_id);
-    el.innerHTML = `<div class="detail-content">
-      <button class="btn-back" id="d-back">← back</button>
-      <div class="detail-top">
-        <div class="detail-title">${esc(selected.name)}</div>
-        <div class="detail-actions">
-          <button class="btn" id="d-edit">Edit</button>
-          <button class="btn danger" id="d-delete">Delete</button>
-        </div>
-      </div>
-      <div class="detail-fields">
-        <div class="field">
-          <span class="field-label">Location</span>
-          <span class="field-value">${loc ? `<a class="loc-link" data-loc-id="${loc.id}">${esc(locationPath(loc.id))}</a>` : '—'}</span>
-        </div>
-        <div class="field">
-          <span class="field-label">Created</span>
-          <span class="field-value muted">${fmtDate(selected.created_at)}</span>
-        </div>
-        <div class="field">
-          <span class="field-label">Updated</span>
-          <span class="field-value muted">${fmtDate(selected.updated_at)}</span>
-        </div>
-      </div>
-    </div>`;
-
-    el.querySelector('#d-edit').addEventListener('click', () => openForm('edit'));
-    el.querySelector('#d-delete').addEventListener('click', deleteSelected);
-    el.querySelectorAll('.loc-link').forEach(a => {
-      a.addEventListener('click', () => {
-        // Switch to locations tab and navigate to that location
-        currentTab = 'locations';
-        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'locations'));
-        selected = null;
-        selectItem(parseInt(a.dataset.locId));
-      });
-    });
+    renderItem()
   }
 
   // Back button (visible only on mobile via CSS)
@@ -332,7 +372,7 @@ function renderDetail(locItems = null) {
   }
 }
 
-// ── Forms ──────────────────────────────────────────────────────────────────
+// -- Forms ------------------------------------------------------------------
 function openForm(action, entityOverride = null, defaultLocationId = null) {
   const entity = entityOverride || (currentTab === 'locations' ? 'location' : 'item');
   formMode = { action, entity, defaultLocationId };
@@ -463,7 +503,7 @@ async function deleteSelected() {
   }
 }
 
-// ── Events ─────────────────────────────────────────────────────────────────
+// -- Events -----------------------------------------------------------------
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     currentTab = tab.dataset.tab;
@@ -497,7 +537,17 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// -- Templates ------------------------------------------------------------------
+function renderTemplate(id, data) {
+  const fragment = document.getElementById(id).content.cloneNode(true);
+  fragment.querySelectorAll('[data-bind]').forEach(el => {
+    const key = el.dataset.bind;
+    if (key in data) el.textContent = data[key];
+  });
+  return fragment;
+}
+
+// -- Init -------------------------------------------------------------------
 (async () => {
   await loadLocations();
   await loadItems(); // pre-load for lookups

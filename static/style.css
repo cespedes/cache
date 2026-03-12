@@ -45,6 +45,7 @@ header {
   display: flex;
   align-items: center;
   gap: 24px;
+  height: 65px;
 }
 
 header h1 {
@@ -235,13 +236,21 @@ main {
   margin-bottom: 32px;
 }
 
-.detail-title {
+h2 {
   font-family: var(--serif);
   font-size: 32px;
   font-weight: 400;
   color: var(--text);
-  flex: 1;
   line-height: 1.1;
+}
+
+h3 {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.1;
+  margin: 1em 0;
 }
 
 .detail-actions {
@@ -249,6 +258,7 @@ main {
   gap: 8px;
   flex-shrink: 0;
   padding-top: 6px;
+  margin-left: auto;
 }
 
 .btn {
@@ -303,14 +313,14 @@ main {
 
 .field-value.muted { color: var(--text-dim); font-size: 12px; }
 
-.loc-link {
+.link {
   color: var(--accent);
   cursor: pointer;
   text-decoration: none;
   border-bottom: 1px solid var(--accent-dim);
   transition: border-color 0.15s, color 0.15s;
 }
-.loc-link:hover { color: var(--text); border-bottom-color: var(--text-dim); }
+.link:hover { color: var(--text); border-bottom-color: var(--text-dim); }
 
 /* FORM */
 .form-overlay {
@@ -447,7 +457,7 @@ main {
   margin-bottom: 12px;
 }
 
-.item-chip {
+.mini-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -461,7 +471,7 @@ main {
   transition: border-color 0.15s;
 }
 
-.item-chip:hover { border-color: var(--accent-dim); color: var(--accent); }
+.mini-item:hover { border-color: var(--accent-dim); color: var(--accent); }
 
 .toast {
   position: fixed;

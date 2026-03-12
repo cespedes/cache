@@ -53,6 +53,74 @@
 
 <div class="toast" id="toast"></div>
 
+<template id="tpl-item">
+  <div class="detail-content">
+    <button class="btn-back" id="d-back">← back</button>
+    <div class="detail-top">
+      <h2 data-bind="title"></h2>
+      <div class="detail-actions">
+        <button class="btn" id="d-edit">Edit</button>
+        <button class="btn danger" id="d-delete">Delete</button>
+      </div>
+    </div>
+    <div class="detail-fields">
+      <div class="field">
+        <span class="field-label">Location</span>
+        <span class="field-value"><a class="link-parent" data-bind="location"></a></span>
+      </div>
+      <div class="field">
+        <span class="field-label">Created</span>
+        <span class="field-value muted" data-bind="created"></span>
+      </div>
+      <div class="field">
+        <span class="field-label">Updated</span>
+        <span class="field-value muted" data-bind="updated"></span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-location">
+  <div class="detail-content">
+    <button class="btn-back" id="d-back">← back</button>
+    <div class="detail-top">
+      <h2 data-bind="title"></h2>
+      <div class="detail-actions">
+        <button class="btn" id="d-edit">Edit</button>
+        <button class="btn danger" id="d-delete">Delete</button>
+      </div>
+    </div>
+    <div class="detail-fields">
+      <div class="field">
+        <span class="field-label">Parent</span>
+        <span class="field-value"><a class="link link-parent" data-bind="parent"></a></span>
+      </div>
+      <div class="field">
+        <span class="field-label">Created</span>
+        <span class="field-value muted" data-bind="created"></span>
+      </div>
+      <div class="field">
+        <span class="field-label">Updated</span>
+        <span class="field-value muted" data-bind="updated"></span>
+      </div>
+    </div>
+    <h3>Locations</h3>
+    <div id="loc-locations"></div>
+    <button class="btn" id="d-new-location">+ Add new location</button>
+    <h3>Items</h3>
+    <div id="loc-items">${itemsHtml}</div>
+    <button class="btn" id="d-new-item">+ Add new item</button>
+  </div>
+</template>
+
+<template id="tpl-mini-item">
+  <span class="mini-item">◈ <span data-bind="name">${esc(i.name)}</span></span>
+</template>
+
+<template id="tpl-mini-location">
+  <span class="mini-location">◈ <span data-bind="name">${esc(i.name)}</span></span>
+</template>
+
 <script src="app.js"></script>
 </body>
 </html>
