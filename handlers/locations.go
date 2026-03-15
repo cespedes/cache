@@ -32,13 +32,14 @@ func ListLocations(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if search != "" {
-		rows, err = db.Pool.Query(context.Background(),
-			`SELECT id, name, parent_id, created_at, updated_at
-																																											 FROM locations WHERE name ILIKE '%' || $1 || '%' ORDER BY name`,
-			search)
+		rows, err = db.Pool.Query(context.Background(), `
+			SELECT id, name, parent_id, created_at, updated_at
+			FROM locations WHERE name ILIKE '%' || $1 || '%' ORDER BY name
+		`, search)
 	} else {
-		rows, err = db.Pool.Query(context.Background(),
-			`SELECT id, name, parent_id, created_at, updated_at FROM locations ORDER BY name`)
+		rows, err = db.Pool.Query(context.Background(), `
+			SELECT id, name, parent_id, created_at, updated_at FROM locations ORDER BY name
+		`)
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -87,10 +88,10 @@ func CreateLocation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var loc models.Location
-	err := db.Pool.QueryRow(context.Background(),
-		`INSERT INTO locations (name, parent_id) VALUES ($1, $2)
-																																																																																																																				 RETURNING id, name, parent_id, created_at, updated_at`,
-		input.Name, input.ParentID).
+	err := db.Pool.QueryRow(context.Background(), `
+		INSERT INTO locations (name, parent_id) VALUES ($1, $2)
+		RETURNING id, name, parent_id, created_at, updated_at
+	`, input.Name, input.ParentID).
 		Scan(&loc.ID, &loc.Name, &loc.ParentID, &loc.CreatedAt, &loc.UpdatedAt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -119,11 +120,11 @@ func UpdateLocation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var loc models.Location
-	err = db.Pool.QueryRow(context.Background(),
-		`UPDATE locations SET name = $1, parent_id = $2
-																																																																																																																																																														 WHERE id = $3
-																																																																																																																																																														 		 RETURNING id, name, parent_id, created_at, updated_at`,
-		input.Name, input.ParentID, id).
+	err = db.Pool.QueryRow(context.Background(), `
+		UPDATE locations SET name = $1, parent_id = $2
+		WHERE id = $3
+		RETURNING id, name, parent_id, created_at, updated_at
+	`, input.Name, input.ParentID, id).
 		Scan(&loc.ID, &loc.Name, &loc.ParentID, &loc.CreatedAt, &loc.UpdatedAt)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -141,8 +142,9 @@ func DeleteLocation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := db.Pool.Exec(context.Background(),
-		`DELETE FROM locations WHERE id = $1`, id)
+	result, err := db.Pool.Exec(context.Background(), `
+		DELETE FROM locations WHERE id = $1
+	`, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

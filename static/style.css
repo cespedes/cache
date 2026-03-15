@@ -457,7 +457,7 @@ h3 {
   margin-bottom: 12px;
 }
 
-.mini-item {
+.mini-item, .mini-location {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -471,7 +471,10 @@ h3 {
   transition: border-color 0.15s;
 }
 
-.mini-item:hover { border-color: var(--accent-dim); color: var(--accent); }
+.mini-item:hover, .mini-location:hover {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
 
 .toast {
   position: fixed;

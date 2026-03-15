@@ -261,15 +261,9 @@ function renderLocation(location) {
 
   const el = document.getElementById('detail');
   const parent = locations.find(l => l.id === location.parent_id);
-  console.log(`parent_id = ${location.parent_id}`);
-  console.log(`parent = ${parent}`);
-  if (parent) {
-    console.log(`parent.id = ${parent.id}`);
-    console.log(`parentPath = ${locationPath(parent.id)}`);
-  }
   const loc = renderTemplate('tpl-location', {
     title: esc(location.name),
-    parent: parent ? locationPath(parent.id) : 'none',
+    parent: parent ? locationPath(parent.id) : 'HOME',
     created: fmtDate(esc(location.created_at)),
     updated: fmtDate(esc(location.created_at))
   });
@@ -288,10 +282,23 @@ function renderLocation(location) {
     });
     locs.appendChild(li);
   });
+
+  const its = loc.querySelector('#loc-items');
+  items.filter(l => l.location_id === location.id).forEach(l => {
+    const li = renderTemplate('tpl-mini-item', {
+      name: l.name,
+    });
+    li.firstElementChild.addEventListener('click', () => {
+      renderItem(l);
+    });
+    its.appendChild(li);
+  });
+
   loc.querySelector('#d-edit').addEventListener('click', () => openForm('edit'));
   loc.querySelector('#d-delete').addEventListener('click', deleteSelected);
   loc.querySelector('#d-new-location').addEventListener('click', () => openForm('create', 'location', location.id));
   loc.querySelector('#d-new-item').addEventListener('click', () => openForm('create', 'item', location.id));
+
   el.innerHTML = '';
   el.appendChild(loc);
 }

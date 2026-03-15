@@ -18,7 +18,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// HTML
-	mux.Handle("/", http.FileServer(http.Dir("static")))
+	mux.Handle("/", http.FileServer(http.Dir(cmp.Or(os.Getenv("STATIC_DIR"), "static"))))
 
 	// Location routes
 	mux.HandleFunc("GET /locations", handlers.ListLocations)
