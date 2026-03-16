@@ -154,11 +154,12 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	var item models.Item
-	err = db.Pool.QueryRow(context.Background(),
-		`INSERT INTO items (name, location_id, position) VALUES ($1, $2, $3)
-		RETURNING id, name, location_id, created_at, updated_at`,
-		input.Name, input.LocationID, position).
+	err = db.Pool.QueryRow(context.Background(), `
+		INSERT INTO items (name, location_id, position) VALUES ($1, $2, $3)
+		RETURNING id, name, location_id, created_at, updated_at
+	`, input.Name, input.LocationID, position).
 		Scan(&item.ID, &item.Name, &item.LocationID, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -208,11 +209,11 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var item models.Item
-	err = db.Pool.QueryRow(context.Background(),
-		`UPDATE items SET name=$1, location_id=$2, position=$3
+	err = db.Pool.QueryRow(context.Background(), `
+		UPDATE items SET name=$1, location_id=$2, position=$3
 		WHERE id=$4
-		RETURNING id, name, location_id, created_at, updated_at`,
-		input.Name, input.LocationID, position, id).
+		RETURNING id, name, location_id, created_at, updated_at
+	`, input.Name, input.LocationID, position, id).
 		Scan(&item.ID, &item.Name, &item.LocationID, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
